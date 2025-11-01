@@ -1,0 +1,127 @@
+---
+title: "Example Analysis"
+bibliography: references.bib
+---
+
+# My Analysis
+Here I am working with the ToothGrowth data in base R. In this data set either a vitamin suppliment or plain orange juice was given to guinea pigs to determine if one was better for tooth growth. My analysis will be to look at a certain dose (0.5) and see if their is a statistically significant difference between the growth for the vitamin or the juice. The intended audiance for this data is any individual in science, maybe in nutrition science who is interested in the difference between plain suppliments and food that contains that suppliment.
+
+## Original Link
+The ToothGrowth dataset is available in R @lenfesty2020.
+
+## Data Dictionary
+
+## Guinea Pigs and Vitamin C: An Old Tale
+
+While investigating this data set, I came to realize that research done on guinea pigs and vitamin C intake has spanned almost 100 years! (Insert Image from the older paper)
+
+::: {.callout-note appearance="simple"}
+
+## Note
+
+I am not a medical expert. Please do not use this data for the care and keeping of your guinea pig.
+
+:::
+
+```{r}
+data(ToothGrowth)
+library(ggplot2)
+library(dplyr)
+
+library(dplyr)
+```
+
+
+```{r}
+#First I want to create a new column for the data that shows the dosage as low, medium or high. This uses the verb mutate and case when
+tooth_data <- ToothGrowth %>%
+ mutate(Level = case_when(
+    dose == 0.5 ~ "Low",
+    dose == 1.0 ~ "Medium",
+    dose == 2.0 ~ "High"
+ ))
+tooth_data
+```
+```{r}
+#Then I want to summairze the mean, median, standard deviation and count the number of observations for each doage group and each treatment. This will allow me to use group by an summarize.
+
+tooth_sum <- tooth_data %>%
+    group_by(supp, Level) %>%
+      summarise(
+    Mean = mean(len),
+    SD = sd(len),
+    Median = median(len),
+    n = n(),
+  )
+
+ print(tooth_sum) 
+```
+
+::: {.column-margin}
+```{r}
+#Finally I want to run a t-test between the high group only. I will filter out my data set to only include these two groups, using my last dplyr verb:filter
+
+t_test_data <- tooth_data %>%
+    filter(Level == "High")
+
+results <- t.test(len ~ supp, data = t_test_data)   
+
+ print(results)
+
+ #the bib would be useful here to show the use of the high group as the most important
+```
+:::
+
+
+```{r}
+#Boxplot showing the different levels and the different treatment options
+ggplot(tooth_data, aes(x = Level, y = len, fill = supp)) +
+  geom_boxplot() +
+  labs(
+    title = "Tooth Length by Dose Group and Supplement",
+    x = "Dose Group",
+    y = "Tooth Length",
+    caption = "Boxplots grouped by supplement",
+    fill = "Suppliment Used"
+  )
+```
+
+```{r}
+#Histogram of all lengths facted by the suppliment used
+
+#change this up a little more!
+ggplot(tooth_data, aes(x = len)) +
+facet_wrap(~supp)+
+  geom_histogram(binwidth = 2, alpha = 0.8, position = "identity") +
+  labs(
+    title = "Tooth Length by Dose Group and Supplement",
+    x = "Dose Group",
+    y = "Tooth Length",
+    caption = "Boxplots grouped by supplement",
+    fill = "Suppliment Used"
+  )
+```
+
+```{r}
+#Scatterplot, need to change this around a little!
+ggplot(ToothGrowth, aes(x = dose, y = len, color = supp)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ supp) +
+  labs(
+    title = "Tooth Length vs Dose",
+    subtitle = "Faceted by Supplement",
+    x = "Dose (mg/day)",
+    y = "Tooth Length",
+    caption = "Scatter with linear trend"
+  )
+
+```
+
+# References
+
+::: {#refs}
+@lenfesty2020
+@wickham2016
+@tidyverse2023
+:::
